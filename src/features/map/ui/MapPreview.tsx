@@ -14,9 +14,11 @@ interface MapPreviewProps {
   zoom: number;
   mapRef: MapInstanceRef;
   interactive?: boolean;
+  allowRotation?: boolean;
   minZoom?: number;
   maxZoom?: number;
   onMoveEnd?: (center: [number, number], zoom: number) => void;
+  onMove?: (center: [number, number], zoom: number) => void;
   containerStyle?: CSSProperties;
   overzoomScale?: number;
 }
@@ -34,9 +36,11 @@ export default function MapPreview({
   zoom,
   mapRef,
   interactive = false,
+  allowRotation = false,
   minZoom,
   maxZoom,
   onMoveEnd,
+  onMove,
   containerStyle,
   overzoomScale = 1,
 }: MapPreviewProps) {
@@ -44,7 +48,9 @@ export default function MapPreview({
   const isSyncing = useRef(false);
   const hasMountedStyleRef = useRef(false);
   const onMoveEndRef = useRef(onMoveEnd);
+  const onMoveRef = useRef(onMove);
   onMoveEndRef.current = onMoveEnd;
+  onMoveRef.current = onMove;
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -66,6 +72,11 @@ export default function MapPreview({
       const currentCenter = map.getCenter();
       onMoveEndRef.current?.([currentCenter.lng, currentCenter.lat], map.getZoom());
     });
+    map.on("move", () => {
+      if (isSyncing.current) return;
+      const currentCenter = map.getCenter();
+      onMoveRef.current?.([currentCenter.lng, currentCenter.lat], map.getZoom());
+    });
 
     return () => {
       mapRef.current = null;
@@ -85,17 +96,23 @@ export default function MapPreview({
       map.touchZoomRotate.enable();
       map.doubleClickZoom.enable();
       map.keyboard.enable();
+      if (allowRotation) {
+        map.dragRotate.enable();
+        map.touchZoomRotate.enableRotation();
+      } else {
+        map.dragRotate.disable();
+        map.touchZoomRotate.disableRotation();
+      }
     } else {
       map.scrollZoom.disable();
       map.dragPan.disable();
       map.touchZoomRotate.disable();
       map.doubleClickZoom.disable();
       map.keyboard.disable();
+      map.touchZoomRotate.disableRotation();
+      map.dragRotate.disable();
     }
-
-    // Keep bearing fixed for poster output.
-    map.dragRotate.disable();
-  }, [interactive, mapRef]);
+  }, [interactive, allowRotation, mapRef]);
 
   useEffect(() => {
     const map = mapRef.current;

@@ -1,6 +1,6 @@
 import useInstallPrompt from "../application/useInstallPrompt";
 import { FaMobileAlt as MobileIcon } from "react-icons/fa";
-import { FiShare2 as ShareIcon } from "react-icons/fi";
+import { FiShare as ShareIcon } from "react-icons/fi";
 import React from "react";
 
 export default function InstallPrompt() {

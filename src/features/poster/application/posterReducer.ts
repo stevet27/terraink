@@ -14,6 +14,7 @@ export interface PosterForm {
   layout: string;
   displayCity: string;
   displayCountry: string;
+  displayContinent: string;
   fontFamily: string;
   showPosterText: boolean;
   includeCredits: boolean;
@@ -31,6 +32,7 @@ export interface PosterState {
   isExporting: boolean;
   isLocationFocused: boolean;
   selectedLocation: SearchResult | null;
+  userLocation: SearchResult | null;
 }
 
 /* ────── Actions ────── */
@@ -43,6 +45,7 @@ export type PosterAction =
   | { type: "SET_COLOR"; key: string; value: string }
   | { type: "RESET_COLORS" }
   | { type: "SELECT_LOCATION"; location: SearchResult }
+  | { type: "SET_USER_LOCATION"; location: SearchResult | null }
   | { type: "CLEAR_LOCATION" }
   | { type: "SET_LOCATION_FOCUSED"; focused: boolean }
   | { type: "SET_ERROR"; error: string }
@@ -64,6 +67,7 @@ export function posterReducer(
         const parts = parseLocationParts(action.value);
         nextForm.displayCity = parts.city;
         nextForm.displayCountry = parts.country;
+        nextForm.displayContinent = "";
       }
 
       return {
@@ -121,7 +125,14 @@ export function posterReducer(
           longitude: action.location.lon.toFixed(6),
           displayCity: action.location.city,
           displayCountry: action.location.country,
+          displayContinent: action.location.continent || "",
         },
+      };
+
+    case "SET_USER_LOCATION":
+      return {
+        ...state,
+        userLocation: action.location,
       };
 
     case "CLEAR_LOCATION":
@@ -133,6 +144,7 @@ export function posterReducer(
           location: "",
           displayCity: "",
           displayCountry: "",
+          displayContinent: "",
         },
       };
 

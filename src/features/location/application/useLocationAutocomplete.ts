@@ -11,6 +11,9 @@ interface UseLocationAutocompleteReturn {
 
 const DEBOUNCE_DELAY_MS = 1000;
 
+// Track in-flight requests globally to deduplicate across multiple hook instances
+const inFlightRequests = new Map<string, Promise<SearchResult[]>>();
+
 export function useLocationAutocomplete(
   locationInput: string,
   isFocused: boolean,
@@ -26,15 +29,32 @@ export function useLocationAutocomplete(
       setLocationSuggestions([]);
       return;
     }
-    setIsLocationSearching(true);
-    try {
-      const suggestions = await searchLocations(q, 6);
-      setLocationSuggestions(suggestions as SearchResult[]);
-    } catch {
-      setLocationSuggestions([]);
-    } finally {
-      setIsLocationSearching(false);
+
+    // Check if this query is already in-flight
+    if (inFlightRequests.has(q)) {
+      const cachedResult = await inFlightRequests.get(q);
+      setLocationSuggestions(cachedResult as SearchResult[]);
+      return;
     }
+
+    setIsLocationSearching(true);
+    const promise = searchLocations(q, 6)
+      .then((suggestions) => {
+        const result = suggestions as SearchResult[];
+        setLocationSuggestions(result);
+        inFlightRequests.delete(q);
+        return result;
+      })
+      .catch(() => {
+        setLocationSuggestions([]);
+        inFlightRequests.delete(q);
+        return [];
+      })
+      .finally(() => {
+        setIsLocationSearching(false);
+      });
+
+    inFlightRequests.set(q, promise);
   }, []);
 
   useEffect(() => {

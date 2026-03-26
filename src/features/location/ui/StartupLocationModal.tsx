@@ -44,7 +44,7 @@ export default function StartupLocationModal({
   const [pendingLocation, setPendingLocation] = useState<PendingLocation | null>(null);
   const [isResolving, setIsResolving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const { locationSuggestions, isLocationSearching, clearLocationSuggestions } =
+  const { locationSuggestions, isLocationSearching, clearLocationSuggestions, searchNow } =
     useLocationAutocomplete(locationInput, isInputFocused);
 
   const showSuggestions = isInputFocused && locationSuggestions.length > 0;
@@ -241,9 +241,13 @@ export default function StartupLocationModal({
           onChange={(event) => {
             setLocationInput(event.target.value);
             setPendingLocation(null);
+            // Restore focus state when user types after selecting a suggestion
+            // (DOM focus may still be on the input, so onFocus won't re-fire).
+            if (!isInputFocused) setIsInputFocused(true);
           }}
           onFocus={() => setIsInputFocused(true)}
           onBlur={() => setTimeout(() => setIsInputFocused(false), 120)}
+          onKeyDown={(e) => { if (e.key === "Enter") void searchNow(e.currentTarget.value); }}
           placeholder="Type a city or place"
           autoComplete="off"
         />

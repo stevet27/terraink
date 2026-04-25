@@ -23,9 +23,12 @@ export interface PosterForm {
   height: string;
   theme: string;
   layout: string;
+  displayTitle: string;
+  citySpacing: number;
   displayCity: string;
   displayCountry: string;
   displayContinent: string;
+  displayDate: string;
   fontFamily: string;
   showPosterText: boolean;
   includeCredits: boolean;
@@ -38,6 +41,9 @@ export interface PosterForm {
   includeRoadPath: boolean;
   includeRoadMinorLow: boolean;
   includeRoadOutline: boolean;
+  includeLandcover: boolean;
+  includeLabels: boolean;
+  includeTerrain: boolean;
   showMarkers: boolean;
 }
 

@@ -60,9 +60,12 @@ export const DEFAULT_FORM: PosterForm = {
   height: String(defaultLayoutHeightCm),
   theme: defaultThemeName,
   layout: defaultLayoutId,
+  displayTitle: "",
+  citySpacing: 2,
   displayCity: "Hanover",
   displayCountry: "Germany",
   displayContinent: "Europe",
+  displayDate: "",
   fontFamily: "",
   showPosterText: true,
   includeCredits: true,
@@ -75,6 +78,9 @@ export const DEFAULT_FORM: PosterForm = {
   includeRoadPath: true,
   includeRoadMinorLow: true,
   includeRoadOutline: true,
+  includeLandcover: true,
+  includeLabels: true,
+  includeTerrain: false,
   showMarkers: true,
 };
 
@@ -194,6 +200,9 @@ export function PosterProvider({ children }: { children: ReactNode }) {
         includeRoadPath: state.form.includeRoadPath,
         includeRoadMinorLow: state.form.includeRoadMinorLow,
         includeRoadOutline: state.form.includeRoadOutline,
+        includeLandcover: state.form.includeLandcover,
+        includeLabels: state.form.includeLabels,
+        includeTerrain: state.form.includeTerrain,
         distanceMeters: Number(state.form.distance),
       }),
     [
@@ -207,6 +216,9 @@ export function PosterProvider({ children }: { children: ReactNode }) {
       state.form.includeRoadPath,
       state.form.includeRoadMinorLow,
       state.form.includeRoadOutline,
+      state.form.includeLandcover,
+      state.form.includeLabels,
+      state.form.includeTerrain,
       state.form.distance,
     ],
   );

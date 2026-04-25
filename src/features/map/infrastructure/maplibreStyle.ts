@@ -5,6 +5,11 @@ import type { StyleSpecification } from "maplibre-gl";
 
 const OPENFREEMAP_SOURCE = "https://tiles.openfreemap.org/planet";
 const SOURCE_ID = "openfreemap";
+const TERRAIN_SOURCE_ID = "terrain";
+const TERRAIN_TILES_URL =
+  "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png";
+const GLYPHS_URL =
+  "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf";
 
 /**
  * OpenFreeMap is OpenMapTiles-based and can generalize data at low zooms.
@@ -198,6 +203,9 @@ export function generateMapStyle(
     includeRoadPath?: boolean;
     includeRoadMinorLow?: boolean;
     includeRoadOutline?: boolean;
+    includeLandcover?: boolean;
+    includeLabels?: boolean;
+    includeTerrain?: boolean;
     distanceMeters?: number;
   },
 ): StyleSpecification {
@@ -218,7 +226,22 @@ export function generateMapStyle(
   const includeRoadPath = options?.includeRoadPath ?? true;
   const includeRoadMinorLow = options?.includeRoadMinorLow ?? true;
   const includeRoadOutline = options?.includeRoadOutline ?? true;
+  const includeLandcover = options?.includeLandcover ?? true;
+  const includeLabels = options?.includeLabels ?? true;
+  const includeTerrain = options?.includeTerrain ?? false;
   const buildingMinZoom = resolveBuildingMinZoom(options?.distanceMeters);
+
+  // Landcover colours derived from existing theme palette so they always harmonise.
+  const forestColor = blendHex(theme.map.parks, theme.ui.text, 0.1);
+  const grassColor = theme.map.parks;
+  const farmlandColor = blendHex(theme.map.land, theme.map.parks, 0.3);
+  const wetlandColor = blendHex(theme.map.water, theme.map.parks, 0.45);
+
+  // Label colours — text on map, not on poster overlay.
+  const labelColor = theme.ui.text;
+  const labelHaloColor = theme.map.land;
+  const waterLabelColor = blendHex(theme.map.water, theme.ui.text, 0.6);
+  const waterLabelHaloColor = theme.map.water;
 
   const minorHighCasingStops = scaledStops(
     MAP_ROAD_MINOR_HIGH_DETAIL_WIDTH_STOPS,
@@ -270,20 +293,89 @@ export function generateMapStyle(
   const roadPathColor = theme.map.roads.path;
   const roadOutlineColor = theme.map.roads.outline;
 
+  const sources: StyleSpecification["sources"] = {
+    [SOURCE_ID]: {
+      type: "vector",
+      url: OPENFREEMAP_SOURCE,
+      maxzoom: SOURCE_MAX_ZOOM,
+    },
+  };
+
+  if (includeTerrain) {
+    sources[TERRAIN_SOURCE_ID] = {
+      type: "raster-dem",
+      tiles: [TERRAIN_TILES_URL],
+      tileSize: 256,
+      maxzoom: 15,
+      encoding: "terrarium",
+    } as any;
+  }
+
   return {
     version: 8,
-    sources: {
-      [SOURCE_ID]: {
-        type: "vector",
-        url: OPENFREEMAP_SOURCE,
-        maxzoom: SOURCE_MAX_ZOOM,
-      },
-    },
+    glyphs: GLYPHS_URL,
+    sources,
     layers: [
       {
         id: "background",
         type: "background",
         paint: { "background-color": theme.map.land },
+      },
+
+      // Terrain hillshading — placed immediately after background so all map
+      // features render on top of the relief.
+      ...(includeTerrain
+        ? ([
+            {
+              id: "hillshade",
+              type: "hillshade",
+              source: TERRAIN_SOURCE_ID,
+              paint: {
+                "hillshade-shadow-color": blendHex(theme.map.land, "#000000", 0.22),
+                "hillshade-highlight-color": blendHex(theme.map.land, "#ffffff", 0.22),
+                "hillshade-illumination-direction": 315,
+                "hillshade-exaggeration": 0.7,
+              },
+            },
+          ] as any[])
+        : []),
+
+      // Landcover — drawn after hillshade so terrain relief shows through.
+      {
+        id: "landcover-forest",
+        source: SOURCE_ID,
+        "source-layer": "landcover",
+        type: "fill" as const,
+        filter: ["match", ["get", "class"], ["wood", "forest", "scrub"], true, false],
+        layout: { visibility: includeLandcover ? ("visible" as const) : ("none" as const) },
+        paint: { "fill-color": forestColor, "fill-opacity": 0.85 },
+      },
+      {
+        id: "landcover-grass",
+        source: SOURCE_ID,
+        "source-layer": "landcover",
+        type: "fill" as const,
+        filter: ["match", ["get", "class"], ["grass", "meadow"], true, false],
+        layout: { visibility: includeLandcover ? ("visible" as const) : ("none" as const) },
+        paint: { "fill-color": grassColor, "fill-opacity": 0.6 },
+      },
+      {
+        id: "landcover-farmland",
+        source: SOURCE_ID,
+        "source-layer": "landcover",
+        type: "fill" as const,
+        filter: ["match", ["get", "class"], ["farmland", "crop"], true, false],
+        layout: { visibility: includeLandcover ? ("visible" as const) : ("none" as const) },
+        paint: { "fill-color": farmlandColor, "fill-opacity": 0.55 },
+      },
+      {
+        id: "landcover-wetland",
+        source: SOURCE_ID,
+        "source-layer": "landcover",
+        type: "fill" as const,
+        filter: ["match", ["get", "class"], ["wetland", "marsh"], true, false],
+        layout: { visibility: includeLandcover ? ("visible" as const) : ("none" as const) },
+        paint: { "fill-color": wetlandColor, "fill-opacity": 0.6 },
       },
 
       // Parks are drawn before water so that marine protected areas / ocean parks
@@ -670,6 +762,197 @@ export function generateMapStyle(
           visibility: includeRoads ? ("visible" as const) : ("none" as const),
           "line-cap": "round" as const,
           "line-join": "round" as const,
+        },
+      },
+
+      // ── Labels ────────────────────────────────────────────────────────────
+      // Always present in the layer list so incremental style updates can diff
+      // visibility changes without a full setStyle call.
+
+      // Water body names (oceans, lakes, rivers).
+      {
+        id: "label-water",
+        source: SOURCE_ID,
+        "source-layer": "water_name",
+        type: "symbol" as const,
+        minzoom: 4,
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Italic"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 4, 9, 10, 13, 16, 16],
+          "text-max-width": 8,
+          "symbol-placement": "point" as const,
+        },
+        paint: {
+          "text-color": waterLabelColor,
+          "text-halo-color": waterLabelHaloColor,
+          "text-halo-width": 1.5,
+          "text-opacity": 0.85,
+        },
+      },
+
+      // City / town / village names.
+      {
+        id: "label-place-city",
+        source: SOURCE_ID,
+        "source-layer": "place",
+        type: "symbol" as const,
+        minzoom: 4,
+        filter: ["match", ["get", "class"], ["city", "capital"], true, false],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Bold"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 4, 10, 8, 14, 12, 18],
+          "text-max-width": 10,
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1.5,
+        },
+      },
+      {
+        id: "label-place-town",
+        source: SOURCE_ID,
+        "source-layer": "place",
+        type: "symbol" as const,
+        minzoom: 8,
+        filter: ["match", ["get", "class"], ["town", "village", "hamlet"], true, false],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 8, 9, 12, 13, 16, 15],
+          "text-max-width": 8,
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1.2,
+          "text-opacity": 0.9,
+        },
+      },
+
+      // Suburb / neighbourhood names — most useful for borough-scale prints.
+      {
+        id: "label-place-suburb",
+        source: SOURCE_ID,
+        "source-layer": "place",
+        type: "symbol" as const,
+        minzoom: 11,
+        filter: ["match", ["get", "class"], ["suburb", "neighbourhood", "quarter"], true, false],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 11, 9, 14, 12, 18, 14],
+          "text-max-width": 8,
+          "text-letter-spacing": 0.05,
+          "text-transform": "uppercase" as const,
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1,
+          "text-opacity": 0.75,
+        },
+      },
+
+      // Street name labels — on-line placement along road geometry.
+      {
+        id: "label-road-major",
+        source: SOURCE_ID,
+        "source-layer": "transportation_name",
+        type: "symbol" as const,
+        minzoom: 10,
+        filter: ["match", ["get", "class"], ["motorway", "primary", "trunk"], true, false],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Regular"],
+          "symbol-placement": "line" as const,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 10, 9, 16, 13],
+          "text-max-angle": 30,
+          "symbol-spacing": 400,
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1.2,
+          "text-opacity": 0.8,
+        },
+      },
+      {
+        id: "label-road-minor",
+        source: SOURCE_ID,
+        "source-layer": "transportation_name",
+        type: "symbol" as const,
+        minzoom: 13,
+        filter: [
+          "match",
+          ["get", "class"],
+          ["secondary", "tertiary", "minor", "residential", "living_street", "unclassified"],
+          true,
+          false,
+        ],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Regular"],
+          "symbol-placement": "line" as const,
+          "text-size": ["interpolate", ["linear"], ["zoom"], 13, 8, 17, 12],
+          "text-max-angle": 30,
+          "symbol-spacing": 350,
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1,
+          "text-opacity": 0.7,
+        },
+      },
+
+      // POI labels — key landmarks, stations, and attractions.
+      {
+        id: "label-poi",
+        source: SOURCE_ID,
+        "source-layer": "poi",
+        type: "symbol" as const,
+        minzoom: 14,
+        filter: [
+          "match",
+          ["get", "class"],
+          [
+            "rail",
+            "subway",
+            "airport",
+            "museum",
+            "attraction",
+            "landmark",
+            "place_of_worship",
+            "hospital",
+            "stadium",
+            "park",
+          ],
+          true,
+          false,
+        ],
+        layout: {
+          visibility: includeLabels ? ("visible" as const) : ("none" as const),
+          "text-field": ["coalesce", ["get", "name_en"], ["get", "name"]],
+          "text-font": ["Noto Sans Regular"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 14, 9, 18, 12],
+          "text-max-width": 8,
+          "text-anchor": "top" as const,
+          "text-offset": [0, 0.5],
+        },
+        paint: {
+          "text-color": labelColor,
+          "text-halo-color": labelHaloColor,
+          "text-halo-width": 1,
+          "text-opacity": 0.85,
         },
       },
     ],

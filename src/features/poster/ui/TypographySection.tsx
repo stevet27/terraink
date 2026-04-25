@@ -123,6 +123,28 @@ export default function TypographySection({
           </span>
         </label>
 
+        <label>
+          Letter spacing
+          <input
+            type="range"
+            name="citySpacing"
+            min="0"
+            max="5"
+            step="1"
+            value={Number(form.citySpacing) || 2}
+            onChange={onChange}
+          />
+        </label>
+        <label>
+          Occasion title
+          <input
+            className="form-control-tall"
+            name="displayTitle"
+            value={form.displayTitle}
+            onChange={onChange}
+            placeholder="e.g. Our Wedding Day"
+          />
+        </label>
         <div className="field-grid keep-two-mobile">
           <label>
             Display city
@@ -145,6 +167,16 @@ export default function TypographySection({
             />
           </label>
         </div>
+        <label>
+          Date
+          <input
+            className="form-control-tall"
+            name="displayDate"
+            value={form.displayDate}
+            onChange={onChange}
+            placeholder="e.g. 14 February 2020"
+          />
+        </label>
         <label>
           Font
           <select

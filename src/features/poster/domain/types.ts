@@ -19,9 +19,12 @@ export interface ExportOptions {
   center: { lat: number; lon: number };
   widthInches: number;
   heightInches: number;
+  displayTitle?: string;
+  citySpacing?: number;
   displayCity: string;
   displayCountry: string;
   displayContinent?: string;
+  displayDate?: string;
   fontFamily: string;
   showPosterText: boolean;
   showOverlay?: boolean;

@@ -436,10 +436,14 @@ export default function PreviewPanel() {
             />
           ) : null}
           <PosterTextOverlay
+            title={form.displayTitle}
+            citySpacing={Number(form.citySpacing) || 2}
+            landscape={widthCm > heightCm}
             city={cityLabel}
             country={countryLabel}
             lat={formLat}
             lon={formLon}
+            date={form.displayDate}
             fontFamily={form.fontFamily}
             textColor={effectiveTheme.ui.text}
             landColor={effectiveTheme.map.land}

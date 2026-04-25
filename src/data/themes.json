@@ -449,6 +449,106 @@
           "minor_low": "#CCCCDA"
         }
       }
+    },
+    "golden_hour": {
+      "name": "Golden Hour",
+      "description": "Warm amber light over parchment land - sunset romance and celebration",
+      "ui": {
+        "bg": "#F7EDD8",
+        "text": "#7A3B0A"
+      },
+      "map": {
+        "land": "#F7EDD8",
+        "water": "#BDD4D8",
+        "waterway": "#BDD4D8",
+        "parks": "#E8DFC0",
+        "buildings": "#D4A060",
+        "aeroway": "#EAE0C8",
+        "rail": "#7a3b0a",
+        "roads": {
+          "major": "#C0680A",
+          "path": "#E8D4B0",
+          "outline": "#EEE0C0",
+          "minor_high": "#D48838",
+          "minor_mid": "#E0B870",
+          "minor_low": "#E8CC90"
+        }
+      }
+    },
+    "moonlight": {
+      "name": "Moonlight",
+      "description": "Silver-blue night palette with soft luminance - intimate and atmospheric",
+      "ui": {
+        "bg": "#0E1A2E",
+        "text": "#C8D8F0"
+      },
+      "map": {
+        "land": "#0E1A2E",
+        "water": "#0A1228",
+        "waterway": "#0A1228",
+        "parks": "#122238",
+        "buildings": "#3A5878",
+        "aeroway": "#122238",
+        "rail": "#c8d8f0",
+        "roads": {
+          "major": "#8AACCC",
+          "path": "#1E3050",
+          "outline": "#253860",
+          "minor_high": "#4878A0",
+          "minor_mid": "#1C2C44",
+          "minor_low": "#162338"
+        }
+      }
+    },
+    "parchment": {
+      "name": "Parchment",
+      "description": "Aged paper with sepia ink lines - timeless antique map aesthetic",
+      "ui": {
+        "bg": "#EDE0C4",
+        "text": "#3D2B1A"
+      },
+      "map": {
+        "land": "#EDE0C4",
+        "water": "#C8D8D0",
+        "waterway": "#C8D8D0",
+        "parks": "#D8D0B4",
+        "buildings": "#B8956C",
+        "aeroway": "#D8D0B4",
+        "rail": "#3d2b1a",
+        "roads": {
+          "major": "#5C3C20",
+          "path": "#D8C8A0",
+          "outline": "#E0D0AC",
+          "minor_high": "#806040",
+          "minor_mid": "#B09060",
+          "minor_low": "#C4A878"
+        }
+      }
+    },
+    "rose_gold": {
+      "name": "Rose Gold",
+      "description": "Blush pink with rose gold accents - elegant and romantic for weddings",
+      "ui": {
+        "bg": "#F5E8E4",
+        "text": "#7A3040"
+      },
+      "map": {
+        "land": "#F5E8E4",
+        "water": "#C8D4DC",
+        "waterway": "#C8D4DC",
+        "parks": "#EAD8D0",
+        "buildings": "#D4909A",
+        "aeroway": "#EAD8D0",
+        "rail": "#7a3040",
+        "roads": {
+          "major": "#B04858",
+          "path": "#EAD0C8",
+          "outline": "#F0DCDA",
+          "minor_high": "#C87080",
+          "minor_mid": "#DCA8B0",
+          "minor_low": "#E4C0C8"
+        }
+      }
     }
   }
 }

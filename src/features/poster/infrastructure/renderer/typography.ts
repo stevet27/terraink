@@ -3,14 +3,19 @@ import type { Coordinate } from "@/shared/geo/types";
 import { APP_CREDIT_URL } from "@/core/config";
 import {
   TEXT_DIMENSION_REFERENCE_PX,
+  TEXT_TITLE_Y_RATIO,
+  TEXT_TITLE_Y_RATIO_LANDSCAPE,
   TEXT_CITY_Y_RATIO,
   TEXT_DIVIDER_Y_RATIO,
   TEXT_COUNTRY_Y_RATIO,
   TEXT_COORDS_Y_RATIO,
   TEXT_EDGE_MARGIN_RATIO,
   CITY_TEXT_SHRINK_THRESHOLD,
+  TITLE_FONT_BASE_PX,
   CITY_FONT_BASE_PX,
+  CITY_FONT_WITH_TITLE_BASE_PX,
   CITY_FONT_MIN_PX,
+  CITY_FONT_WITH_TITLE_MIN_PX,
   COUNTRY_FONT_BASE_PX,
   COORDS_FONT_BASE_PX,
   ATTRIBUTION_FONT_BASE_PX,
@@ -31,6 +36,9 @@ export function drawPosterText(
   showPosterText: boolean,
   showOverlay: boolean,
   includeCredits: boolean = true,
+  displayTitle: string = "",
+  displayDate: string = "",
+  citySpacing: number = 2,
 ): void {
   const textColor = theme.ui?.text || "#111111";
   const landColor = theme.map?.land || "#808080";
@@ -58,12 +66,34 @@ export function drawPosterText(
   const attributionFontSize = ATTRIBUTION_FONT_BASE_PX * dimScale;
 
   if (showPosterText) {
-    const cityLabel = formatCityLabel(city);
+    const titleText = displayTitle.trim();
+    const hasTitle = titleText.length > 0;
+
+    if (hasTitle) {
+      const titleFontSize = TITLE_FONT_BASE_PX * dimScale;
+      const titleYRatio = width > height ? TEXT_TITLE_Y_RATIO_LANDSCAPE : TEXT_TITLE_Y_RATIO;
+      const titleY = height * titleYRatio;
+      // Soft halo so the title lifts off road detail behind it.
+      ctx.shadowColor = landColor;
+      ctx.shadowBlur = 10 * dimScale;
+      ctx.globalAlpha = 0.92;
+      ctx.fillStyle = textColor;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = `300 italic ${titleFontSize}px ${titleFontFamily}`;
+      ctx.fillText(titleText, width * 0.5, titleY);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    const cityLabel = formatCityLabel(city, citySpacing);
     const cityLength = Math.max(city.length, 1);
-    let cityFontSize = CITY_FONT_BASE_PX * dimScale;
+    const cityBase = hasTitle ? CITY_FONT_WITH_TITLE_BASE_PX : CITY_FONT_BASE_PX;
+    const cityMin = hasTitle ? CITY_FONT_WITH_TITLE_MIN_PX : CITY_FONT_MIN_PX;
+    let cityFontSize = cityBase * dimScale;
     if (cityLength > CITY_TEXT_SHRINK_THRESHOLD) {
       cityFontSize = Math.max(
-        CITY_FONT_MIN_PX * dimScale,
+        cityMin * dimScale,
         cityFontSize * (CITY_TEXT_SHRINK_THRESHOLD / cityLength),
       );
     }
@@ -93,11 +123,10 @@ export function drawPosterText(
 
     ctx.globalAlpha = 0.75;
     ctx.font = `400 ${coordinateFontSize}px ${bodyFontFamily}`;
-    ctx.fillText(
-      formatCoordinates(center.lat, center.lon),
-      width * 0.5,
-      coordinatesY,
-    );
+    const detailText = displayDate.trim()
+      ? displayDate.trim()
+      : formatCoordinates(center.lat, center.lon);
+    ctx.fillText(detailText, width * 0.5, coordinatesY);
     ctx.globalAlpha = 1;
   }
 

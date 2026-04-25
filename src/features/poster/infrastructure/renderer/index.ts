@@ -21,8 +21,11 @@ export async function compositeExport(
     center,
     widthInches: _wi,
     heightInches: _hi,
+    displayTitle = "",
     displayCity,
     displayCountry,
+    displayDate = "",
+    citySpacing = 2,
     fontFamily,
     showPosterText = true,
     showOverlay = true,
@@ -79,6 +82,9 @@ export async function compositeExport(
     showPosterText,
     showOverlay,
     includeCredits,
+    displayTitle,
+    displayDate,
+    citySpacing,
   );
 
   const size: CanvasSize = {

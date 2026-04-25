@@ -2,14 +2,19 @@ import { formatCoordinates } from "@/shared/geo/posterBounds";
 import { APP_CREDIT_URL } from "@/core/config";
 import {
   TEXT_DIMENSION_REFERENCE_PX,
+  TEXT_TITLE_Y_RATIO,
+  TEXT_TITLE_Y_RATIO_LANDSCAPE,
   TEXT_CITY_Y_RATIO,
   TEXT_DIVIDER_Y_RATIO,
   TEXT_COUNTRY_Y_RATIO,
   TEXT_COORDS_Y_RATIO,
   TEXT_EDGE_MARGIN_RATIO,
   CITY_TEXT_SHRINK_THRESHOLD,
+  TITLE_FONT_BASE_PX,
   CITY_FONT_BASE_PX,
+  CITY_FONT_WITH_TITLE_BASE_PX,
   CITY_FONT_MIN_PX,
+  CITY_FONT_WITH_TITLE_MIN_PX,
   COUNTRY_FONT_BASE_PX,
   COORDS_FONT_BASE_PX,
   ATTRIBUTION_FONT_BASE_PX,
@@ -18,10 +23,14 @@ import {
 import { parseHex } from "@/shared/utils/color";
 
 interface PosterTextOverlayProps {
+  title: string;
+  citySpacing: number;
   city: string;
+  landscape: boolean;
   country: string;
   lat: number;
   lon: number;
+  date: string;
   fontFamily: string;
   textColor: string;
   landColor: string;
@@ -36,10 +45,14 @@ interface PosterTextOverlayProps {
  * positioned to match the canvas export layout exactly.
  */
 export default function PosterTextOverlay({
+  title,
+  citySpacing,
   city,
+  landscape,
   country,
   lat,
   lon,
+  date,
   fontFamily,
   textColor,
   landColor,
@@ -56,11 +69,15 @@ export default function PosterTextOverlay({
     ? `"${fontFamily}", "IBM Plex Mono", monospace`
     : '"IBM Plex Mono", monospace';
 
-  const cityLabel = formatCityLabel(city);
+  const hasTitle = title.trim().length > 0;
+  const titleFontSize = `${toCqMin(TITLE_FONT_BASE_PX)}cqmin`;
+  const cityBaseSize = toCqMin(hasTitle ? CITY_FONT_WITH_TITLE_BASE_PX : CITY_FONT_BASE_PX);
+  const cityMinSize = toCqMin(hasTitle ? CITY_FONT_WITH_TITLE_MIN_PX : CITY_FONT_MIN_PX);
+  const detailText = date.trim() ? date.trim() : formatCoordinates(lat, lon);
+
+  const cityLabel = formatCityLabel(city, citySpacing);
 
   const cityLen = Math.max(city.length, 1);
-  const cityBaseSize = toCqMin(CITY_FONT_BASE_PX);
-  const cityMinSize = toCqMin(CITY_FONT_MIN_PX);
   const cityFontSize =
     cityLen > CITY_TEXT_SHRINK_THRESHOLD
       ? `${Math.max(cityMinSize, cityBaseSize * (CITY_TEXT_SHRINK_THRESHOLD / cityLen))}cqmin`
@@ -84,6 +101,19 @@ export default function PosterTextOverlay({
     <div className="poster-text-overlay" style={{ color: textColor }}>
       {showPosterText && (
         <>
+          {title.trim() && (
+            <p
+              className="poster-title"
+              style={{
+                fontFamily: titleFont,
+                top: `${(landscape ? TEXT_TITLE_Y_RATIO_LANDSCAPE : TEXT_TITLE_Y_RATIO) * 100}%`,
+                fontSize: titleFontSize,
+                textShadow: `0 0 12px ${landColor}, 0 0 6px ${landColor}`,
+              }}
+            >
+              {title.trim()}
+            </p>
+          )}
           <p
             className="poster-city"
             style={{
@@ -119,7 +149,7 @@ export default function PosterTextOverlay({
               fontSize: coordsFontSize,
             }}
           >
-            {formatCoordinates(lat, lon)}
+            {detailText}
           </p>
         </>
       )}

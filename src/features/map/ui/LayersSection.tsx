@@ -91,6 +91,42 @@ export default function LayersSection({
           <span className="theme-switch-track" aria-hidden="true" />
         </span>
       </label>
+      <label className="toggle-field">
+        <span>Show landcover</span>
+        <span className="theme-switch">
+          <input
+            type="checkbox"
+            name="includeLandcover"
+            checked={Boolean(form.includeLandcover)}
+            onChange={onChange}
+          />
+          <span className="theme-switch-track" aria-hidden="true" />
+        </span>
+      </label>
+      <label className="toggle-field">
+        <span>Show labels</span>
+        <span className="theme-switch">
+          <input
+            type="checkbox"
+            name="includeLabels"
+            checked={Boolean(form.includeLabels)}
+            onChange={onChange}
+          />
+          <span className="theme-switch-track" aria-hidden="true" />
+        </span>
+      </label>
+      <label className="toggle-field">
+        <span>Show terrain</span>
+        <span className="theme-switch">
+          <input
+            type="checkbox"
+            name="includeTerrain"
+            checked={Boolean(form.includeTerrain)}
+            onChange={onChange}
+          />
+          <span className="theme-switch-track" aria-hidden="true" />
+        </span>
+      </label>
 
       <div className="map-details-section">
         <h3 className="map-details-subtitle">Map Details</h3>

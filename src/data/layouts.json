@@ -44,6 +44,56 @@
           "unit": "cm",
           "posterWidthCm": 21.6,
           "posterHeightCm": 27.9
+        },
+        {
+          "id": "print_a3_landscape",
+          "name": "A3 Landscape",
+          "description": "ISO A3 landscape format.",
+          "width": 42,
+          "height": 29.7,
+          "unit": "cm",
+          "posterWidthCm": 42,
+          "posterHeightCm": 29.7
+        },
+        {
+          "id": "print_a4_landscape",
+          "name": "A4 Landscape",
+          "description": "ISO A4 landscape format.",
+          "width": 29.7,
+          "height": 21,
+          "unit": "cm",
+          "posterWidthCm": 29.7,
+          "posterHeightCm": 21
+        },
+        {
+          "id": "print_a5_landscape",
+          "name": "A5 Landscape",
+          "description": "ISO A5 landscape format.",
+          "width": 21,
+          "height": 14.8,
+          "unit": "cm",
+          "posterWidthCm": 21,
+          "posterHeightCm": 14.8
+        },
+        {
+          "id": "print_letter_us_landscape",
+          "name": "Letter (US) Landscape",
+          "description": "US Letter landscape format.",
+          "width": 27.9,
+          "height": 21.6,
+          "unit": "cm",
+          "posterWidthCm": 27.9,
+          "posterHeightCm": 21.6
+        },
+        {
+          "id": "print_poster_30x20",
+          "name": "Poster 30 x 20 cm",
+          "description": "Classic landscape poster size (3:2 ratio).",
+          "width": 30,
+          "height": 20,
+          "unit": "cm",
+          "posterWidthCm": 30,
+          "posterHeightCm": 20
         }
       ]
     },

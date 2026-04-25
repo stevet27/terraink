@@ -12,6 +12,7 @@ import { applyFades } from "@/features/poster/infrastructure/renderer/layers";
 import { drawPosterText } from "@/features/poster/infrastructure/renderer/typography";
 import { MAP_OVERZOOM_SCALE } from "@/features/map/infrastructure/constants";
 import type { ResolvedTheme } from "@/features/theme/domain/types";
+import { buildSvgClipElement, type ClipShape } from "@/features/poster/infrastructure/renderer/clipShapes";
 
 const EXPORT_MAP_TIMEOUT_MS = 15_000;
 
@@ -32,6 +33,7 @@ interface LayeredSvgOptions {
   includeCredits: boolean;
   markers: MarkerItem[];
   markerIcons: MarkerIconDefinition[];
+  clipShape?: string;
 }
 
 function waitForMapIdle(map: MaplibreMap): Promise<void> {
@@ -114,6 +116,7 @@ export async function createLayeredSvgBlobFromMap({
   includeCredits,
   markers,
   markerIcons,
+  clipShape = "none",
 }: LayeredSvgOptions): Promise<Blob> {
   await waitForMapIdle(map);
 
@@ -274,13 +277,31 @@ export async function createLayeredSvgBlobFromMap({
       }),
     });
 
-    const mapLayerGroups = mapLayerDataUrls
+    const resolvedClipShape = (clipShape || "none") as ClipShape;
+    const hasClip = resolvedClipShape !== "none";
+    const clipElement = hasClip
+      ? buildSvgClipElement(exportWidth, exportHeight, resolvedClipShape)
+      : "";
+
+    const mapLayerGroupsInner = mapLayerDataUrls
       .map(
         (layer) => `<g id="map-layer-${sanitizeLayerId(layer.id)}">
   <image href="${layer.dataUrl}" width="${exportWidth}" height="${exportHeight}" preserveAspectRatio="none" />
 </g>`,
       )
       .join("\n");
+
+    const mapSection = hasClip
+      ? `<defs>
+  <clipPath id="poster-shape-clip">
+    ${clipElement}
+  </clipPath>
+</defs>
+<rect width="${exportWidth}" height="${exportHeight}" fill="${theme.ui.bg}" />
+<g clip-path="url(#poster-shape-clip)">
+${mapLayerGroupsInner}
+</g>`
+      : mapLayerGroupsInner;
 
     const overlayGroups = overlayLayers
       .map(
@@ -292,7 +313,7 @@ export async function createLayeredSvgBlobFromMap({
 
     const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${exportWidth}" height="${exportHeight}" viewBox="0 0 ${exportWidth} ${exportHeight}">
-${mapLayerGroups}
+${mapSection}
 ${overlayGroups}
 </svg>`;
 

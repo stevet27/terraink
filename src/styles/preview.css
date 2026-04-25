@@ -44,6 +44,14 @@
     0 8px 14px rgba(0, 0, 0, 0.42);
 }
 
+/* ── Clip shape wrapper (map + fades + markers, not text) ── */
+
+.poster-map-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
 /* ── MapLibre container ── */
 
 .map-container {

@@ -81,6 +81,7 @@ export const DEFAULT_FORM: PosterForm = {
   includeLandcover: true,
   includeLabels: true,
   includeTerrain: false,
+  clipShape: "none",
   showMarkers: true,
 };
 

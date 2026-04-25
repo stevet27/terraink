@@ -25,6 +25,7 @@ import {
   MAP_BUTTON_ZOOM_STEP,
 } from "@/features/map/infrastructure";
 import { MAP_OVERZOOM_SCALE } from "@/features/map/infrastructure/constants";
+import { heartBBoxPath } from "@/features/poster/infrastructure/renderer/clipShapes";
 import {
   DEFAULT_POSTER_WIDTH_CM,
   DEFAULT_POSTER_HEIGHT_CM,
@@ -164,6 +165,19 @@ export default function PreviewPanel() {
   const widthCm = Number(form.width) || DEFAULT_POSTER_WIDTH_CM;
   const heightCm = Number(form.height) || DEFAULT_POSTER_HEIGHT_CM;
   const aspect = widthCm / heightCm;
+  const clipShape = form.clipShape || "none";
+  const mapClipStyle: CSSProperties =
+    clipShape === "circle"
+      ? (() => {
+          // True circle: rx and ry represent equal pixel radii expressed as
+          // percentages of element width and height respectively.
+          const rx = aspect < 1 ? 48 : +(48 / aspect).toFixed(1);
+          const ry = aspect < 1 ? +(48 * aspect).toFixed(1) : 48;
+          return { clipPath: `ellipse(${rx}% ${ry}% at 50% 46%)` };
+        })()
+      : clipShape === "heart"
+        ? { clipPath: "url(#terraink-heart-clip)" }
+        : {};
   const formLat = Number(form.latitude) || 0;
   const formLon = Number(form.longitude) || 0;
   const layoutOption =
@@ -407,34 +421,48 @@ export default function PreviewPanel() {
             } as CSSProperties
           }
         >
-          <MapPreview
-            style={mapStyle}
-            center={mapCenter}
-            zoom={mapZoom}
-            mapRef={mapRef}
-            interactive={isEditing && !isMarkerEditorActive}
-            allowRotation={isEditing && isRotationEnabled}
-            minZoom={mapMinZoom}
-            maxZoom={mapMaxZoom}
-            overzoomScale={MAP_OVERZOOM_SCALE}
-            onMove={handleMove}
-            onMoveEnd={handleMoveEnd}
-          />
-          {form.showMarkers ? (
-            <GradientFades color={effectiveTheme.ui.bg} />
-          ) : null}
-          {hasVisibleMarkers ? (
-            <MarkerOverlay
-              markers={state.markers}
-              customIcons={state.customMarkerIcons}
+          {clipShape === "heart" && (
+            <svg
+              style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
+              aria-hidden="true"
+            >
+              <defs>
+                <clipPath id="terraink-heart-clip" clipPathUnits="objectBoundingBox">
+                  <path d={heartBBoxPath(aspect)} />
+                </clipPath>
+              </defs>
+            </svg>
+          )}
+          <div className="poster-map-clip" style={mapClipStyle}>
+            <MapPreview
+              style={mapStyle}
+              center={mapCenter}
+              zoom={mapZoom}
               mapRef={mapRef}
-              isMarkerEditMode={isMarkerEditorActive}
-              activeMarkerId={activeMarkerId}
-              onActiveMarkerChange={handleMarkerActiveChange}
-              onMarkerPositionChange={handleMarkerPositionChange}
-              onMarkerSizeChange={handleMarkerSizeChange}
+              interactive={isEditing && !isMarkerEditorActive}
+              allowRotation={isEditing && isRotationEnabled}
+              minZoom={mapMinZoom}
+              maxZoom={mapMaxZoom}
+              overzoomScale={MAP_OVERZOOM_SCALE}
+              onMove={handleMove}
+              onMoveEnd={handleMoveEnd}
             />
-          ) : null}
+            {form.showMarkers ? (
+              <GradientFades color={effectiveTheme.ui.bg} />
+            ) : null}
+            {hasVisibleMarkers ? (
+              <MarkerOverlay
+                markers={state.markers}
+                customIcons={state.customMarkerIcons}
+                mapRef={mapRef}
+                isMarkerEditMode={isMarkerEditorActive}
+                activeMarkerId={activeMarkerId}
+                onActiveMarkerChange={handleMarkerActiveChange}
+                onMarkerPositionChange={handleMarkerPositionChange}
+                onMarkerSizeChange={handleMarkerSizeChange}
+              />
+            ) : null}
+          </div>
           <PosterTextOverlay
             title={form.displayTitle}
             citySpacing={Number(form.citySpacing) || 2}

@@ -891,6 +891,49 @@ button.color-editor-target:focus-visible {
   color: #b9cfde;
 }
 
+.clip-shape-selector {
+  margin-top: 16px;
+}
+
+.clip-shape-options {
+  display: flex;
+  gap: 6px;
+}
+
+.clip-shape-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(140, 180, 210, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  color: #a8bfd1;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.clip-shape-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.clip-shape-option.is-active {
+  background: rgba(100, 180, 230, 0.18);
+  border-color: rgba(100, 180, 230, 0.55);
+  color: #d8eef9;
+}
+
+.clip-shape-option:hover:not(.is-active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: #c5dcea;
+}
+
 .section-summary-label {
   margin: 0 0 10px;
   font-size: 1rem;

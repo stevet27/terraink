@@ -35,6 +35,7 @@ export interface ExportOptions {
   markerScaleX?: number;
   markerScaleY?: number;
   markerSizeScale?: number;
+  clipShape?: string;
 }
 
 export interface Typography {

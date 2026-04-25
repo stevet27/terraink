@@ -128,6 +128,27 @@ export default function LayersSection({
         </span>
       </label>
 
+      <div className="clip-shape-selector">
+        <p className="section-summary-label" style={{ marginTop: 4 }}>MAP SHAPE</p>
+        <div className="clip-shape-options">
+          {(["none", "circle", "heart"] as const).map((shape) => (
+            <label
+              key={shape}
+              className={`clip-shape-option${form.clipShape === shape ? " is-active" : ""}`}
+            >
+              <input
+                type="radio"
+                name="clipShape"
+                value={shape}
+                checked={form.clipShape === shape}
+                onChange={onChange}
+              />
+              {shape === "none" ? "Rectangle" : shape === "circle" ? "Circle" : "Heart"}
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div className="map-details-section">
         <h3 className="map-details-subtitle">Map Details</h3>
         <div className="map-details-card">

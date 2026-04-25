@@ -44,6 +44,7 @@ export interface PosterForm {
   includeLandcover: boolean;
   includeLabels: boolean;
   includeTerrain: boolean;
+  clipShape: string;
   showMarkers: boolean;
 }
 

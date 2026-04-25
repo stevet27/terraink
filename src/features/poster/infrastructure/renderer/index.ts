@@ -1,5 +1,6 @@
 import { applyFades } from "./layers";
 import { drawPosterText } from "./typography";
+import { applyCanvasClip, type ClipShape } from "./clipShapes";
 import { drawMarkersOnCanvas } from "@/features/markers/infrastructure/rendering";
 import type { ExportOptions, CanvasSize } from "../../domain/types";
 
@@ -37,6 +38,7 @@ export async function compositeExport(
     markerScaleY = 1,
     markerSizeScale = 1,
   } = options;
+  const clipShape = (options.clipShape || "none") as ClipShape;
 
   const width = mapCanvas.width;
   const height = mapCanvas.height;
@@ -47,6 +49,16 @@ export async function compositeExport(
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas rendering is not available.");
+
+  // Fill background so it shows outside any clip shape.
+  ctx.fillStyle = theme.ui.bg;
+  ctx.fillRect(0, 0, width, height);
+
+  // Clip to shape — all layers until restore() are masked.
+  if (clipShape !== "none") {
+    ctx.save();
+    applyCanvasClip(ctx, width, height, clipShape);
+  }
 
   // 1. Draw map snapshot
   ctx.drawImage(mapCanvas, 0, 0);
@@ -67,6 +79,11 @@ export async function compositeExport(
       markerScaleY,
       markerSizeScale,
     );
+  }
+
+  // Remove clip before drawing text so text is never masked.
+  if (clipShape !== "none") {
+    ctx.restore();
   }
 
   // 4. Poster text

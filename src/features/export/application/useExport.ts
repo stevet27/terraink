@@ -131,6 +131,7 @@ export function useExport() {
             markerIcons: hasVisibleMarkers
               ? getAllMarkerIcons(state.customMarkerIcons)
               : [],
+            clipShape: form.clipShape || "none",
           });
           const svgFilename = createPosterFilename(
             form.displayCity || form.location,
@@ -175,6 +176,7 @@ export function useExport() {
           markerScaleX: hasVisibleMarkers ? markerScaleX : undefined,
           markerScaleY: hasVisibleMarkers ? markerScaleY : undefined,
           markerSizeScale: hasVisibleMarkers ? markerSizeScale : undefined,
+          clipShape: form.clipShape || "none",
         });
 
         // 3. Download
